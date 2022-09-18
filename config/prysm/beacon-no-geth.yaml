@@ -5,7 +5,7 @@
 ##
 ############################################################
 
-accept-terms-of-use: true
+accept-terms-of-use: yes
 
 datadir: /data
 
@@ -19,6 +19,7 @@ monitoring-host: 0.0.0.0
 
 grpc-gateway-host: 0.0.0.0
 grpc-gateway-port: 3500
+eth-api-port: 3501
 
 # disable scan of local network
 p2p-denylist: ["private"]
@@ -26,16 +27,14 @@ p2p-denylist: ["private"]
 # changing this also needs to be changed in docker-compose.yaml!
 p2p-tcp-port: 13000
 
-p2p-max-peers: 400
+p2p-max-peers: 100
 
-block-batch-limit: 1024
+##############################
+# Connection to geth container
+http-web3provider: "https://mainnet.infura.io:443/v3/bd6043ee2acc446ca2185409bdeb2903"
 
-execution-endpoint: http://geth:8551
-jwt-secret: /geth/jwt.hex
-suggested-fee-recipient: 0x41b4099b9f3AD682eCBCa7B0f1C96544aeD2b3c3
+fallback-web3provider: []
 
-http-mev-relay: http://mev-boost:18550
-
-mainnet: true
+mainnet: yes
 
 # EOF

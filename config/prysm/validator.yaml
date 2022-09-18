@@ -5,7 +5,7 @@
 ##
 ############################################################
 
-accept-terms-of-use: yes
+accept-terms-of-use: true
 
 ##############
 # Connectivity
@@ -16,15 +16,17 @@ grpc-gateway-host: 0.0.0.0 # web-ui
 
 #########
 # Web-UI
-web: yes
+web: true
 
 #####################################
 # Validator database, accounts & key management
 datadir: /data/db
 wallet-dir: /data/wallets
 wallet-password-file: /data/passwords/wallet-password
+suggested-fee-recipient: 0x41b4099b9f3AD682eCBCa7B0f1C96544aeD2b3c3
+enable-builder: true
 
-mainnet: yes
+mainnet: true
 
 ###########
 # Fun Stuff

@@ -20,12 +20,23 @@ services:
     image: ethereum/client-go:${GETH_DOCKER_TAG}
     restart: always
     hostname: geth
-    command: --http --http.port=8545 --http.addr=0.0.0.0 --http.vhosts="*" --allow-insecure-unlock --http.api="db,eth,net,web3,personal"
+    command: 
+      - --http
+      - --http.port=8545
+      - --http.addr=0.0.0.0
+      - --http.vhosts="*"
+      - --allow-insecure-unlock
+      - --http.api="db,eth,net,web3,personal,engine,admin"
+      - --authrpc.addr=0.0.0.0
+      - --authrpc.vhosts=*
+      - --authrpc.jwtsecret=/root/.ethereum/jwt.hex
+      - --authrpc.port=8551
     stop_grace_period: 5m
     ports:
       - 30303:30303/tcp
       - 30303:30303/udp
       - ${BEACON_API_IP}:8545:8545
+      - ${BEACON_API_IP}:8551:8551
     volumes:
       - ./data/geth:/root/.ethereum
     <<: *logging
@@ -44,6 +55,7 @@ services:
     volumes:
       - ./config/prysm/beacon.yaml:/config/beacon.yaml:ro
       - ./data/prysm/beacon:/data
+            - ./data/geth:/geth
     <<: *logging
 
   validator:
@@ -108,6 +120,45 @@ services:
     image: prom/node-exporter:${PROMETHEUS_NODE_EXPORTER_DOCKER_TAG}
     user: "2000"
     hostname: node-exporter
+    <<: *logging
+
+  mev-boost:
+    image: flashbots/mev-boost:latest
+    restart: on-failure
+    hostname: mev-boost
+    depends_on:
+      - validator
+    command:
+      - -addr=0.0.0.0:18550
+      - -mainnetß
+      - -relay-check
+      - -relays=https://0xac6e77dfe25ecd6110b8e780608cce0dab71fdd5ebea22a16c0205200f2f8e2e3ad3b71d3499c54ad14d6c21b41a37ae@boost-relay.flashbots.net
+    ports:
+      - 18550:18550
+    volumes:
+      - ./config/mev-boost/system/mev-boost.service:/etc/systemd/system/mev-boost.service:ro
+    <<: *logging
+
+  eth2-client-metrics-exporter:
+    image: gobitfly/eth2-client-metrics-exporter
+    restart: unless-stopped
+    depends_on:
+      - beacon
+      - validator
+    command:
+      - --server.address=${ETH2_CLIENT_METRICS_EXPORTER_API}
+      - --system.partition=/host/rootfs
+      - --beaconnode.type=prysm
+      - --beaconnode.address=http://beacon-chain:8080/metrics
+      - --validator.type=prysm
+      - --validator.address=http://validator:8081/metrics
+    volumes:
+      - /sys:/host/sys:ro
+      - /proc:/host/proc:ro
+      - /:/host/rootfs:ro
+    environment:
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
     <<: *logging
 
 networks:
